@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holy Bible | Read & Reflect</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f3ec;
+      color: #25352c;
+    }
+
+    header {
+      background: #244b3b;
+      color: white;
+      text-align: center;
+      padding: 30px 16px;
+    }
+
+    header .cross {
+      font-size: 32px;
+      color: #e9d39a;
+    }
+
+    header h1 {
+      margin: 10px 0 6px;
+      font-family: Georgia, serif;
+    }
+
+    header p { margin: 0; color: #e0e9e2; }
+
+    main {
+      max-width: 700px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 18px #203a2b12;
+    }
+
+    h2 { color: #244b3b; margin-top: 0; }
+
+    button, select, input {
+      font: inherit;
+      border-radius: 9px;
+      padding: 12px;
+    }
+
+    button {
+      background: #244b3b;
+      color: white;
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:hover { background: #376b52; }
+
+    .primary {
+      width: 100%;
+      margin: 8px 0;
+      font-weight: bold;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    select, input {
+      width: 100%;
+      border: 1px solid #ccd6ce;
+      background: white;
+      color: #25352c;
+    }
+
+    .verse {
+      border-left: 4px solid #d4b76d;
+      background: #faf8f1;
+      padding: 16px;
+      margin-top: 12px;
+      border-radius: 5px 12px 12px 5px;
+      line-height: 1.8;
+    }
+
+    .verse strong { color: #94722b; }
+
+    .telugu {
+      font-size: 19px;
+      line-height: 2;
+    }
+
+    .muted {
+      color: #66756b;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #66756b;
+    }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 420px) {
+      .controls { grid-template-columns: 1fr; }
+      .card { padding: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="cross">✝</div>
+    <h1 id="siteTitle">Holy Bible</h1>
+    <p id="tagline">Read the Word. Grow in Faith.</p>
+  </header>
+
+  <main>
+    <section class="card" id="welcome">
+      <h2 id="welcomeTitle">Welcome to the Bible</h2>
+      <p id="welcomeText">
+        Take a quiet moment, read God's Word, and find encouragement for today.
+      </p>
+      <button class="primary" id="readButton">📖 Read the Bible</button>
+    </section>
+
+    <section class="card" id="reader" hidden>
+      <h2 id="readerTitle">Bible Reader</h2>
+
+      <label for="language" id="languageLabel">Choose language</label>
+      <select id="language">
+        <option value="en">English</option>
+        <option value="te">తెలుగు (Telugu)</option>
+      </select>
+
+      <div class="controls">
+        <div>
+          <label for="book" id="bookLabel">Book</label>
+          <select id="book">
+            <option value="Genesis">Genesis</option>
+            <option value="John">John</option>
+          </select>
+        </div>
+        <div>
+          <label for="chapter" id="chapterLabel">Chapter</label>
+          <select id="chapter"></select>
+        </div>
+      </div>
+
+      <label for="search" id="searchLabel">Search displayed verses</label>
+      <input id="search" type="search"
+        placeholder="Type a word or verse reference...">
+
+      <div id="verses" aria-live="polite"></div>
+
+      <p class="muted" id="notice">
+        Starter demo: only selected sample verses are included.
+      </p>
+    </section>
+  </main>
+
+  <footer id="footerText">Made with faith and love ♡</footer>
+
+  <script>
+    const bible = {
+      Genesis: {
+        1: [
+          {
+            n: 1,
+            en: "In the beginning God created the heaven and the earth.",
+            te: "ఆదియందు దేవుడు భూమ్యాకాశములను సృజించెను."
+          },
+          {
+            n: 3,
+            en: "And God said, Let there be light: and there was light.",
+            te: "దేవుడు వెలుగు కలుగును గాకని పలుకగా వెలుగు కలిగెను."
+          }
+        ]
+      },
+      John: {
+        3: [
+          {
+            n: 16,
+            en: "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+            te: "దేవుడు లోకమును ఎంతో ప్రేమించెను. కాగా ఆయన తన అద్వితీయ కుమారుని అనుగ్రహించెను; ఆయనయందు విశ్వాసముంచు ప్రతివాడును నశింపక నిత్యజీవము పొందును."
+          }
+        ]
+      }
+    };
+
+    const $ = id => document.getElementById(id);
+    let started = false;
+
+    const translations = {
+      en: {
+        tagline: "Read the Word. Grow in Faith.",
+        welcomeTitle: "Welcome to the Bible",
+        welcomeText: "Take a quiet moment, read God's Word, and find encouragement for today.",
+        readButton: "📖 Read the Bible",
+        readerTitle: "Bible Reader",
+        languageLabel: "Choose language",
+        bookLabel: "Book",
+        chapterLabel: "Chapter",
+        searchLabel: "Search displayed verses",
+        searchPlaceholder: "Type a word or verse reference...",
+        notice: "Starter demo: only selected sample verses are included.",
+        noVerses: "No sample verses are available for this chapter yet.",
+        noResults: "No matching verses found.",
+        footer: "Made with faith and love ♡"
+      },
+      te: {
+        tagline: "దేవుని వాక్యాన్ని చదవండి. విశ్వాసంలో ఎదగండి.",
+        welcomeTitle: "బైబిలుకు స్వాగతం",
+        welcomeText: "దేవుని వాక్యాన్ని చదివి, ఈ రోజు ప్రోత్సాహాన్ని పొందండి.",
+        readButton: "📖 బైబిల్ చదవండి",
+        readerTitle: "బైబిల్ పఠనం",
+        languageLabel: "భాషను ఎంచుకోండి",
+        bookLabel: "గ్రంథం",
+        chapterLabel: "అధ్యాయం",
+        searchLabel: "వచనాలలో వెతకండి",
+        searchPlaceholder: "పదం లేదా వచన సంఖ్య టైప్ చేయండి...",
+        notice: "ప్రారంభ నమూనా: కొన్ని వచనాలు మాత్రమే ఉన్నాయి.",
+        noVerses: "ఈ అధ్యాయానికి నమూనా వచనాలు ఇంకా లేవు.",
+        noResults: "సరిపోలే వచనాలు కనబడలేదు.",
+        footer: "విశ్వాసంతో, ప్రేమతో రూపొందించబడింది ♡"
+      }
+    };
+
+    function updateChapters() {
+      const book = $("book").value;
+      const chapterSelect = $("chapter");
+      const chapters = Object.keys(bible[book]);
+
+      chapterSelect.innerHTML = "";
+      chapters.forEach(ch => {
+        const option = document.createElement("option");
+        option.value = ch;
+        option.textContent = ch;
+        chapterSelect.appendChild(option);
+      });
+      renderVerses();
+    }
+
+    function renderVerses() {
+      const lang = $("language").value;
+      const book = $("book").value;
+      const chapter = $("chapter").value;
+      const query = $("search").value.trim().toLowerCase();
+      const words = (bible[book] && bible[book][chapter]) || [];
+      const results = $("verses");
+      results.replaceChildren();
+
+      const filtered = words.filter(v =>
+        (book + " " + chapter + ":" + v.n + " " +
+        v.en + " " + v.te).toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        const message = document.createElement("p");
+        message.textContent = query
+          ? translations[lang].noResults
+          : translations[lang].noVerses;
+        results.appendChild(message);
+        return;
+      }
+
+      filtered.forEach(v => {
+        const article = document.createElement("article");
+        article.className = "verse";
+
+        const reference = document.createElement("strong");
+        reference.textContent = book + " " + chapter + ":" + v.n;
+
+        const text = document.createElement("p");
+        text.textContent = v[lang];
+        if (lang === "te") text.className = "telugu";
+
+        article.append(reference, text);
+        results.appendChild(article);
+      });
+    }
+
+    function updateLanguage() {
+      const lang = $("language").value;
+      const t = translations[lang];
+
+      $("tagline").textContent = t.tagline;
+      $("welcomeTitle").textContent = t.welcomeTitle;
+      $("welcomeText").textContent = t.welcomeText;
+      $("readButton").textContent = t.readButton;
+      $("readerTitle").textContent = t.readerTitle;
+      $("languageLabel").textContent = t.languageLabel;
+      $("bookLabel").textContent = t.bookLabel;
+      $("chapterLabel").textContent = t.chapterLabel;
+      $("searchLabel").textContent = t.searchLabel;
+      $("search").placeholder = t.searchPlaceholder;
+      $("notice").textContent = t.notice;
+      $("footerText").textContent = t.footer;
+      document.documentElement.lang = lang;
+      renderVerses();
+    }
+
+    $("readButton").addEventListener("click", () => {
+      started = true;
+      $("welcome").hidden = true;
+      $("reader").hidden = false;
+      updateChapters();
+    });
+
+    $("language").addEventListener("change", updateLanguage);
+    $("book").addEventListener("change", updateChapters);
+    $("chapter").addEventListener("change", renderVerses);
+    $("search").addEventListener("input", renderVerses);
+
+    updateChapters();
+  </script>
+</body>
+</html>
